@@ -18,7 +18,7 @@ rm -rf $PWD/m4/coolstore-ui/node_modules
 echo "Waiting 30 seconds to finialize deletion of resources..."
 sleep 30
 
-oc new-app --as-deployment-config -e POSTGRESQL_USER=inventory \
+oc new-app -e POSTGRESQL_USER=inventory \
   -e POSTGRESQL_PASSWORD=mysecretpassword \
   -e POSTGRESQL_DATABASE=inventory openshift/postgresql:latest \
   --name=inventory-database
@@ -34,7 +34,7 @@ oc annotate dc/inventory app.openshift.io/vcs-ref=ocp-4.7 --overwrite
 echo "Deployed Inventory service........"
 
 echo "Deploying Catalog service........"
-oc new-app --as-deployment-config -e POSTGRESQL_USER=catalog \
+oc new-app -e POSTGRESQL_USER=catalog \
              -e POSTGRESQL_PASSWORD=mysecretpassword \
              -e POSTGRESQL_DATABASE=catalog \
              openshift/postgresql:latest \
@@ -45,7 +45,7 @@ mvn clean install spring-boot:repackage -DskipTests -f $PWD/m4/catalog-service
 oc new-build registry.access.redhat.com/ubi8/openjdk-11 --binary --name=catalog -l app=catalog
 oc start-build catalog --from-file=$PWD/m4/catalog-service/target/catalog-1.0.0-SNAPSHOT.jar --follow
 
-oc new-app catalog  --as-deployment-config -e JAVA_OPTS_APPEND='-Dspring.profiles.active=openshift' && oc expose service catalog && \
+oc new-app catalog -e JAVA_OPTS_APPEND='-Dspring.profiles.active=openshift' && oc expose service catalog && \
 oc label dc/catalog app.kubernetes.io/part-of=catalog app.openshift.io/runtime=rh-spring-boot --overwrite && \
 oc label dc/catalog-database app.kubernetes.io/part-of=catalog app.openshift.io/runtime=postgresql --overwrite && \
 oc annotate dc/catalog app.openshift.io/connects-to=inventory,catalog-database --overwrite && \
@@ -54,7 +54,7 @@ oc annotate dc/catalog app.openshift.io/vcs-ref=ocp-4.7 --overwrite
 echo "Deployed Catalog service........"
 
 echo "Deploying Cart service........"
-oc new-app --as-deployment-config infinispan/server:12.0.0.Final-1 --name=datagrid-service -e USER=user -e PASS=pass
+oc new-app infinispan/server:12.0.0.Final-1 --name=datagrid-service -e USER=user -e PASS=pass
 
 mvn clean package -DskipTests -f $PWD/m4/cart-service
 oc rollout status -w dc/cart
@@ -66,7 +66,7 @@ oc annotate dc/cart app.openshift.io/vcs-ref=ocp-4.7 --overwrite
 echo "Deployed Cart service........"
 
 echo "Deploying Order service........"
-oc new-app --as-deployment-config --docker-image mongo:4.0 --name=order-database
+oc new-app --docker-image mongo:4.0 --name=order-database
 
 mvn clean package -DskipTests -f $PWD/m4/order-service
 oc rollout status -w dc/order
